@@ -12,6 +12,8 @@ func main() {
 
 	if args.Mode == "files" {
 		manifest.GenerateModeFileSize(args.Output, args.Num)
+	} else if args.Mode == "types" {
+		manifest.GenerateModeTypes(args.Output)
 	}
 
 }

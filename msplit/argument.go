@@ -42,7 +42,7 @@ func (a *Args) validate() {
 		a.Mode = "default"
 	}
 
-	if a.Mode == "f" && a.Num < 1 {
+	if a.Mode == ModeFiles && a.Num < 1 {
 		flag.Usage()
 		log.Fatal("The Number of files must be greater than 1")
 	}

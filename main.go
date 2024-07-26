@@ -10,9 +10,9 @@ func main() {
 
 	manifest := msplit.ReadXML(args.Input)
 
-	if args.Mode == "files" {
+	if args.Mode == msplit.ModeFiles {
 		manifest.GenerateModeFileSize(args.Output, args.Num)
-	} else if args.Mode == "types" {
+	} else if args.Mode == msplit.ModeTypes {
 		manifest.GenerateModeTypes(args.Output)
 	}
 

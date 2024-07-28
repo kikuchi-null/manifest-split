@@ -25,5 +25,6 @@ go.work.sum
 .DS_Store
 
 # test data
-./testdata
-./testdata/*
+./sample
+./sample/input/*
+./sample/output/*

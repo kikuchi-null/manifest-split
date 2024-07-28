@@ -24,7 +24,7 @@ type Types struct {
 	Name    string   `xml:"name"`
 }
 
-func ReadXML(input string) (m Manifest, err error) {
+func ReadXML(input string) (m Manifest) {
 	xmlFile, err := os.Open(input)
 	if err != nil {
 		log.Fatalf("Error opening file %v", err)
@@ -33,7 +33,7 @@ func ReadXML(input string) (m Manifest, err error) {
 
 	byteValue, _ := io.ReadAll(xmlFile)
 
-	if err := xml.Unmarshal(byteValue, &m); err != nil {
+	if err = xml.Unmarshal(byteValue, &m); err != nil {
 		log.Fatalf("Error unmarshalling XML: %v", err)
 	}
 
@@ -43,10 +43,10 @@ func ReadXML(input string) (m Manifest, err error) {
 
 }
 
-func GenerateOutputDirectory(output string) (err error) {
+func GenerateOutputDirectory(output string) {
 
-	err = os.MkdirAll(output, os.ModePerm)
-	return
+	err := os.MkdirAll(output, os.ModePerm)
+	log.Fatalf("Error making output directory: %v", err)
 
 }
 

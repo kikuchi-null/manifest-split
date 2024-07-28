@@ -1,8 +1,8 @@
 package ms
 
 import (
-	"errors"
 	"flag"
+	"log"
 )
 
 // mode: default, types, files
@@ -35,7 +35,7 @@ type Args struct {
 
 // }
 
-func RecieveArgs() (a Args, err error) {
+func RecieveArgs() (a Args) {
 	i := flag.String("input", "", "分割したいpackage.xmlのパス")
 	o := flag.String("output", "", "出力先のパス")
 	m := flag.String("mode", "default", "分割モード（任意）")
@@ -50,9 +50,7 @@ func RecieveArgs() (a Args, err error) {
 	}
 
 	// 入力値の検証
-	if err = a.validate(); err != nil {
-		return
-	}
+	a.validate()
 
 	return
 }
@@ -60,17 +58,17 @@ func RecieveArgs() (a Args, err error) {
 func (a *Args) validate() (err error) {
 	if a.Mode != ModeSample && (a.Input == "" || a.Output == "") {
 		flag.Usage()
-		err = errors.New("inputとoutputを指定してください")
+		log.Fatalf("inputとoutputを指定してください")
 	}
 
 	if a.Mode == ModeDefault && a.Num > MemberLimit {
 		flag.Usage()
-		err = errors.New("コンポーネント数が10000以上だと組織からメタデータを取得できません")
+		log.Fatalf("コンポーネント数が10000以上だと組織からメタデータを取得できません")
 	}
 
 	if a.Mode == ModeDefault && a.Num < 1 {
 		flag.Usage()
-		err = errors.New("ファイル数は1以上を指定してください")
+		log.Fatalf("ファイル数は1以上を指定してください")
 	}
 
 	return

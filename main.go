@@ -1,33 +1,20 @@
 package main
 
 import (
-	"fmt"
 	"manifest-split/ms"
-	"os"
 )
 
 func main() {
-	err := run()
-	if err != nil {
-		os.Exit(2)
-	}
+	run()
 }
 
 func run() (err error) {
 
 	// ターミナルからの入力を受け取る
-	args, err := ms.RecieveArgs()
-	if err != nil {
-		return
-	}
-
-	fmt.Printf("mode: %v\n", args.Mode)
+	args := ms.RecieveArgs()
 
 	// 出力先 ディレクトリの生成
-	err = ms.GenerateOutputDirectory(args.Output)
-	if err != nil {
-		return
-	}
+	ms.GenerateOutputDirectory(args.Output)
 
 	// package.xml生成
 	if args.Mode == ms.ModeSample {
@@ -36,7 +23,7 @@ func run() (err error) {
 
 	} else {
 		// package.xmlの分割
-		manifest, _ := ms.ReadXML(args.Input)
+		manifest := ms.ReadXML(args.Input)
 
 		if args.Mode == ms.ModeFiles {
 			// 指定されたファイル数に分割

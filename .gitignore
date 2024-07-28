@@ -2,7 +2,7 @@
 # https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
 #
 # Binaries for programs and plugins
-*.exe
+# *.exe
 *.exe~
 *.dll
 *.so
@@ -23,3 +23,7 @@ go.work.sum
 
 # Mac
 .DS_Store
+
+# test data
+./testdata
+./testdata/*

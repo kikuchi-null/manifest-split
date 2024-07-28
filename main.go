@@ -1,16 +1,10 @@
 package main
 
 import (
-	"fmt"
 	"manifest-split/ms"
 )
 
 func main() {
-
-	var input string
-	fmt.Print("input: ")
-	fmt.Scan(&input)
-	fmt.Println(input)
 
 	args := ms.RecieveArgs()
 

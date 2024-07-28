@@ -24,5 +24,5 @@ func GenerateLargePackageXML(output string) {
 	}
 
 	// XMLファイルを生成
-	write(m, output, 1)
+	write(m, output, nil)
 }

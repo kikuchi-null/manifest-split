@@ -2,6 +2,7 @@ package ms
 
 import (
 	"flag"
+	"fmt"
 	"log"
 )
 
@@ -13,33 +14,11 @@ type Args struct {
 	Num    int
 }
 
-// func RecieveArgs() (a Args) {
-
-// 	fmt.Print("Path to the input package.xml: ")
-// 	fmt.Scan(&a.Input)
-
-// 	fmt.Print("Path to the output directory: ")
-// 	fmt.Scan(&a.Output)
-
-// 	fmt.Print("Split Mode(Default, ): ")
-// 	fmt.Scan(&a.Mode)
-
-// 	fmt.Print("Number of files to split into: ")
-// 	fmt.Scan(&a.Num)
-
-// 	a.validate()
-
-// 	fmt.Println(a)
-
-// 	return
-
-// }
-
 func RecieveArgs() (a Args) {
 	i := flag.String("input", "", "分割したいpackage.xmlのパス")
-	o := flag.String("output", "", "出力先のパス")
+	o := flag.String("output", "", "分割したpackage.xml出力先のパス")
 	m := flag.String("mode", "default", "分割モード（任意）")
-	n := flag.Int("n", 1, "1ファイルに含まれるコンポーネント数の上限(最大1万) または 分割したいファイル数")
+	n := flag.Int("n", 1, "1ファイルに含まれるコンポーネント数の上限(max 10000) または 分割したいファイル数")
 	flag.Parse()
 
 	a = Args{
@@ -55,14 +34,34 @@ func RecieveArgs() (a Args) {
 	return
 }
 
-func (a *Args) validate() (err error) {
+func RecieveArgsInterraction() (a Args) {
+
+	fmt.Print("分割したいpackage.xmlのパス: ")
+	fmt.Scan(&a.Input)
+
+	fmt.Print("分割したpackage.xml出力先のパス: ")
+	fmt.Scan(&a.Output)
+
+	fmt.Print("分割モード（任意）: ")
+	fmt.Scan(&a.Mode)
+
+	fmt.Print("1ファイルに含まれるコンポーネント数の上限(最大1万) または 分割したいファイル数: ")
+	fmt.Scan(&a.Num)
+
+	// 入力値の検証
+	a.validate()
+
+	return
+
+}
+
+func (a *Args) validate() {
 	if a.Mode != ModeSample && (a.Input == "" || a.Output == "") {
 		flag.Usage()
 		log.Fatalf("inputとoutputを指定してください")
 	}
 
 	if a.Mode == ModeDefault && a.Num > MemberLimit {
-		flag.Usage()
 		log.Fatalf("コンポーネント数が10000以上だと組織からメタデータを取得できません")
 	}
 
@@ -71,5 +70,4 @@ func (a *Args) validate() (err error) {
 		log.Fatalf("ファイル数は1以上を指定してください")
 	}
 
-	return
 }

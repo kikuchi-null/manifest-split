@@ -46,9 +46,7 @@ func ReadXML(input string) (m Manifest) {
 func GenerateOutputDirectory(output string) {
 
 	err := os.MkdirAll(output, os.ModePerm)
-	if err != nil {
-		log.Fatalf("Error making output directory: %v", err)
-	}
+	log.Fatalf("Error making output directory: %v", err)
 
 }
 
@@ -70,7 +68,7 @@ func (m *Manifest) GenerateModeDefault(output string, componentsPerFile int) {
 	}
 
 	if len(m.Types) <= componentsPerFile {
-		write(*m, output, nil)
+		write(*m, output, 1)
 
 	} else {
 		// 指定されたコンポーネント数以下のpackage.xmlを作成する
@@ -84,7 +82,7 @@ func (m *Manifest) GenerateModeDefault(output string, componentsPerFile int) {
 				partManifest := m.generatePartManifest(typesToWrite)
 
 				filenumber := int(math.Ceil(float64(i) / float64(componentsPerFile)))
-				write(partManifest, output, &filenumber)
+				write(partManifest, output, filenumber)
 
 				typesToWrite = []Types{}
 			}
@@ -97,7 +95,7 @@ func (m *Manifest) GenerateModeTypes(output string) {
 
 	for i, t := range m.Types {
 		partManifest := m.generatePartManifest([]Types{t})
-		write(partManifest, output, &i)
+		write(partManifest, output, i)
 	}
 
 }
@@ -120,7 +118,7 @@ func (m *Manifest) GenerateModeFileSize(output string, n int) {
 		}
 
 		partManifest := m.generatePartManifest(typesToWrite)
-		write(partManifest, output, &i)
+		write(partManifest, output, i)
 	}
 
 }
@@ -137,26 +135,20 @@ func (m *Manifest) generatePartManifest(types []Types) (partManifest Manifest) {
 	return
 }
 
-func write(manifest Manifest, output string, filenumber *int) {
+func write(manifest Manifest, output string, filenumber int) {
 
-	var filename string
-	if filenumber == nil {
-		filename = filepath.Join(output, "package.xml")
-	} else {
-		filename = filepath.Join(output, fmt.Sprintf("%03d_package.xml", *filenumber))
-	}
-
+	finename := filepath.Join(output, fmt.Sprintf("%03d_package.xml", filenumber))
 	manifestXml, err := xml.MarshalIndent(manifest, "", "    ")
 
 	if err != nil {
 		log.Fatalf("Error marshalling XML: %v", err)
 	}
 
-	err = os.WriteFile(filename, append([]byte(xml.Header), manifestXml...), 0644)
+	err = os.WriteFile(finename, append([]byte(xml.Header), manifestXml...), 0644)
 	if err != nil {
 		log.Fatalf("Error writing file: %v", err)
 	}
 
-	fmt.Printf("Generated file: %s\n", filename)
+	fmt.Printf("Generated file: %s\n", finename)
 
 }

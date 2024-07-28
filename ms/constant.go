@@ -1,4 +1,4 @@
-package msplit
+package ms
 
 const (
 	ModeTypes string = "types"

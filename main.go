@@ -1,18 +1,18 @@
 package main
 
 import (
-	"manifest-split/msplit"
+	"manifest-split/ms"
 )
 
 func main() {
 
-	args := msplit.RecieveArgs()
+	args := ms.RecieveArgs()
 
-	manifest := msplit.ReadXML(args.Input)
+	manifest := ms.ReadXML(args.Input)
 
-	if args.Mode == msplit.ModeFiles {
+	if args.Mode == ms.ModeFiles {
 		manifest.GenerateModeFileSize(args.Output, args.Num)
-	} else if args.Mode == msplit.ModeTypes {
+	} else if args.Mode == ms.ModeTypes {
 		manifest.GenerateModeTypes(args.Output)
 	}
 

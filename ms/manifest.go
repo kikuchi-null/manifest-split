@@ -14,7 +14,7 @@ import (
 // 読み取り、書き込みともに利用する
 type Manifest struct {
 	XMLName xml.Name `xml:"Package"`
-	Xmlns   string   `xml:"xmln,attr"`
+	Xmlns   string   `xml:"xmlns,attr"`
 	Types   []Types  `xml:"types"`
 	Version string   `xml:"version"`
 }

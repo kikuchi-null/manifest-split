@@ -11,7 +11,7 @@ func GenerateLargePackageXML(output string) {
 	numMembers := MemberLimit + 1 // 各メタデータタイプのメンバー数を10001に設定
 
 	var m Manifest
-	m.Xmlns = "http://soap.sforce.com/2006/04/metadata"
+	m.Xmlns = XMLNS
 	m.Version = "61.0"
 
 	for _, metadataType := range metadataTypes {

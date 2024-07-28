@@ -11,18 +11,19 @@ func GenerateLargePackageXML(output string) {
 	numMembers := MemberLimit + 1 // 各メタデータタイプのメンバー数を10001に設定
 
 	var m Manifest
+	m.Xmlns = "http://soap.sforce.com/2006/04/metadata"
 	m.Version = "61.0"
 
 	for _, metadataType := range metadataTypes {
 		var t Types
 		t.Name = metadataType
 		for i := 1; i <= numMembers; i++ {
-			member := fmt.Sprintf("%s%d", strings.ToLower(metadataType), i)
+			member := fmt.Sprintf("%s%05d", strings.ToLower(metadataType), i)
 			t.Members = append(t.Members, member)
 		}
 		m.Types = append(m.Types, t)
 	}
 
 	// XMLファイルを生成
-	write(m, output, 1)
+	write(m, output, nil)
 }

@@ -1,11 +1,11 @@
 package ms
 
 import (
+	"errors"
 	"flag"
-	"log"
 )
 
-// mode: default(10000コンポーネント以下に分割), types, files
+// mode: default, types, files
 type Args struct {
 	Input  string
 	Output string
@@ -13,11 +13,33 @@ type Args struct {
 	Num    int
 }
 
-func RecieveArgs() (a Args) {
-	i := flag.String("input", "", "Path to the input XML file")
-	o := flag.String("output", "", "Path to the output directory")
-	m := flag.String("mode", "", "The number of the output files")
-	n := flag.Int("n", 1, "Number of files to split into")
+// func RecieveArgs() (a Args) {
+
+// 	fmt.Print("Path to the input package.xml: ")
+// 	fmt.Scan(&a.Input)
+
+// 	fmt.Print("Path to the output directory: ")
+// 	fmt.Scan(&a.Output)
+
+// 	fmt.Print("Split Mode(Default, ): ")
+// 	fmt.Scan(&a.Mode)
+
+// 	fmt.Print("Number of files to split into: ")
+// 	fmt.Scan(&a.Num)
+
+// 	a.validate()
+
+// 	fmt.Println(a)
+
+// 	return
+
+// }
+
+func RecieveArgs() (a Args, err error) {
+	i := flag.String("input", "", "分割したいpackage.xmlのパス")
+	o := flag.String("output", "", "出力先のパス")
+	m := flag.String("mode", "default", "分割モード（任意）")
+	n := flag.Int("n", 1, "1ファイルに含まれるコンポーネント数の上限(最大1万) または 分割したいファイル数")
 	flag.Parse()
 
 	a = Args{
@@ -27,23 +49,29 @@ func RecieveArgs() (a Args) {
 		Num:    *n,
 	}
 
-	a.validate()
+	// 入力値の検証
+	if err = a.validate(); err != nil {
+		return
+	}
 
 	return
 }
 
-func (a *Args) validate() {
-	if a.Input == "" || a.Output == "" {
+func (a *Args) validate() (err error) {
+	if a.Mode != ModeSample && (a.Input == "" || a.Output == "") {
 		flag.Usage()
-		log.Fatal("Both input and output parameters are required")
+		err = errors.New("inputとoutputを指定してください")
 	}
 
-	if a.Mode == "" {
-		a.Mode = "default"
+	if a.Mode == ModeDefault && a.Num > MemberLimit {
+		flag.Usage()
+		err = errors.New("コンポーネント数が10000以上だと組織からメタデータを取得できません")
 	}
 
-	if a.Mode == ModeFiles && a.Num < 1 {
+	if a.Mode == ModeDefault && a.Num < 1 {
 		flag.Usage()
-		log.Fatal("The Number of files must be greater than 1")
+		err = errors.New("ファイル数は1以上を指定してください")
 	}
+
+	return
 }

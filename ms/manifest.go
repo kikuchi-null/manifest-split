@@ -147,7 +147,6 @@ func write(manifest Manifest, output string, filenumber *int) {
 	}
 
 	manifestXml, err := xml.MarshalIndent(manifest, "", "    ")
-
 	if err != nil {
 		log.Fatalf("Error marshalling XML: %v", err)
 	}

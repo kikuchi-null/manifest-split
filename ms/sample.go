@@ -12,7 +12,7 @@ func GenerateLargePackageXML(output string) {
 
 	var m Manifest
 	m.Xmlns = XMLNS
-	m.Version = "61.0"
+	m.Version = VERSION
 
 	for _, metadataType := range metadataTypes {
 		var t Types

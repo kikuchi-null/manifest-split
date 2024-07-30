@@ -7,4 +7,5 @@ const (
 	ModeSample  string = "sample"
 	MemberLimit int    = 10000
 	XMLNS       string = "http://soap.sforce.com/2006/04/metadata"
+	VERSION     string = "61.0"
 )

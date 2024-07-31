@@ -6,7 +6,7 @@ import (
 	"log"
 )
 
-// mode: default, types, files
+// 入力を格納する
 type Args struct {
 	Input  string
 	Output string
@@ -14,6 +14,7 @@ type Args struct {
 	Num    int
 }
 
+// ターミナルからの入力を受け取る
 func RecieveArgs() (a Args) {
 
 	fmt.Println("入力したらEnter")
@@ -56,21 +57,33 @@ func RecieveArgs() (a Args) {
 // }
 
 func (a *Args) validate() (err error) {
+
+	// 入力検証
 	if a.Mode == "" {
+		// モード指定がない場合はデフォルトモードで起動
 		a.Mode = ModeDefault
 	}
 
+	if a.Mode == ModeSample && a.Output == "" {
+		// 出力先の入力確認
+		flag.Usage()
+		log.Fatalf("outputを指定してください")
+	}
+
 	if a.Mode != ModeSample && (a.Input == "" || a.Output == "") {
+		// 入力ファイルと出力先の入力確認
 		flag.Usage()
 		log.Fatalf("inputとoutputを指定してください")
 	}
 
-	if a.Mode == ModeDefault && a.Num > MemberLimit {
+	if a.Mode == ModeDefault && (a.Num < 1 || a.Num > MemberLimit) {
+		// xmlファイルに含まれるコンポーネント数上限・下限確認
 		flag.Usage()
-		log.Fatalf("コンポーネント数が10000以上だと組織からメタデータを取得できません")
+		log.Fatalf("コンポーネント数は1〜10000までで指定してください")
 	}
 
-	if a.Mode == ModeDefault && a.Num < 1 {
+	if a.Mode == ModeFiles && a.Num < 1 {
+		// 1ファイルに含まれる
 		flag.Usage()
 		log.Fatalf("ファイル数は1以上を指定してください")
 	}

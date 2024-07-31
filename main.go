@@ -25,21 +25,18 @@ func run() (err error) {
 		// package.xmlの分割
 		manifest := ms.ReadXML(args.Input)
 
-		if args.Mode == ms.ModeFiles {
+		switch args.Mode {
+		case ms.ModeFiles:
 			// 指定されたファイル数に分割
 			manifest.GenerateModeFileSize(args.Output, args.Num)
-
-		} else if args.Mode == ms.ModeTypes {
+		case ms.ModeTypes:
 			// Typesごとに分割
 			manifest.GenerateModeTypes(args.Output)
-
-		} else {
+		default:
 			// デフォルトモード
 			// package.xmlに含まれるコンポーネント数が10000以下になるように分割
 			manifest.GenerateModeDefault(args.Output, args.Num)
-
 		}
-
 	}
 	return
 

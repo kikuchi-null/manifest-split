@@ -1,7 +1,7 @@
 # @salesforce/cliにて取得したPackage.xmlを分割する
 
 ## 使用方法
-ターミナルまたはFinderからこのツールを起動し、以下の情報を入力すえう
+ターミナルまたはFinderからこのツールを起動し、以下の情報を入力する
 - -input string：分割したいpackage.xmlのパス
 - -output string：出力先のパス
 - -mode string：分割モード分割モード(Enterでデフォルトモード)

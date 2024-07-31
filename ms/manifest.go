@@ -25,6 +25,8 @@ type Types struct {
 }
 
 func ReadXML(input string) (m Manifest) {
+
+	// package.xmlの読み込み
 	xmlFile, err := os.Open(input)
 	if err != nil {
 		log.Fatalf("Error opening file %v", err)
@@ -45,6 +47,8 @@ func ReadXML(input string) (m Manifest) {
 
 func GenerateOutputDirectory(output string) {
 
+	// 出力先ディレクトリの生成
+	// ディレクトリが存在しない場合のみ作成
 	err := os.MkdirAll(output, os.ModePerm)
 	if err != nil {
 		log.Fatalf("Error making output directory: %v", err)
@@ -95,6 +99,7 @@ func (m *Manifest) GenerateModeDefault(output string, componentsPerFile int) {
 
 func (m *Manifest) GenerateModeTypes(output string) {
 
+	// Typesごとにpackage.xmlを分割する
 	for i, t := range m.Types {
 		partManifest := m.generatePartManifest([]Types{t})
 		write(partManifest, output, &i)
@@ -104,6 +109,7 @@ func (m *Manifest) GenerateModeTypes(output string) {
 
 func (m *Manifest) GenerateModeFileSize(output string, n int) {
 
+	// 指定されたファイル数にpackage.xmlを分割する
 	// 1ファイルごとのTypes数
 	componentsPerFile := int(math.Ceil(float64(len(m.Types)) / float64(n)))
 
@@ -127,6 +133,7 @@ func (m *Manifest) GenerateModeFileSize(output string, n int) {
 
 func (m *Manifest) generatePartManifest(types []Types) (partManifest Manifest) {
 
+	// ファイルに書き込む構造体を生成する
 	partManifest = Manifest{
 		XMLName: m.XMLName,
 		Xmlns:   m.Xmlns,
@@ -135,11 +142,15 @@ func (m *Manifest) generatePartManifest(types []Types) (partManifest Manifest) {
 	}
 
 	return
+
 }
 
 func write(manifest Manifest, output string, filenumber *int) {
 
+	// XMLファイルの生成
 	var filename string
+
+	// ファイル番号が指定された場合は連番でファイルを生成する
 	if filenumber == nil {
 		filename = filepath.Join(output, "package.xml")
 	} else {

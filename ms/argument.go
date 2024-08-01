@@ -56,7 +56,7 @@ func RecieveArgs() (a Args) {
 // 	return
 // }
 
-func (a *Args) validate() (err error) {
+func (a *Args) validate() {
 
 	// 入力検証
 	if a.Mode == "" {
@@ -88,5 +88,4 @@ func (a *Args) validate() (err error) {
 		log.Fatalf("ファイル数は1以上を指定してください")
 	}
 
-	return
 }

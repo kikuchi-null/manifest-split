@@ -29,7 +29,7 @@ func ReadXML(input string) (m Manifest) {
 	// package.xmlの読み込み
 	xmlFile, err := os.Open(input)
 	if err != nil {
-		log.Fatalf("Error opening file %v", err)
+		log.Fatalf("Error opening file: %v", err)
 	}
 	defer xmlFile.Close()
 
@@ -74,7 +74,7 @@ func (m *Manifest) GenerateModeDefault(output string, componentsPerFile int) {
 	}
 
 	if len(m.Types) <= componentsPerFile {
-		write(*m, output, nil)
+		m.write(output, nil)
 
 	} else {
 		// 指定されたコンポーネント数以下のpackage.xmlを作成する
@@ -88,7 +88,7 @@ func (m *Manifest) GenerateModeDefault(output string, componentsPerFile int) {
 				partManifest := m.generatePartManifest(typesToWrite)
 
 				filenumber := int(math.Ceil(float64(i) / float64(componentsPerFile)))
-				write(partManifest, output, &filenumber)
+				partManifest.write(output, &filenumber)
 
 				typesToWrite = []Types{}
 			}
@@ -101,8 +101,9 @@ func (m *Manifest) GenerateModeTypes(output string) {
 
 	// Typesごとにpackage.xmlを分割する
 	for i, t := range m.Types {
+		i += 1
 		partManifest := m.generatePartManifest([]Types{t})
-		write(partManifest, output, &i)
+		partManifest.write(output, &i)
 	}
 
 }
@@ -125,8 +126,9 @@ func (m *Manifest) GenerateModeFileSize(output string, n int) {
 			break
 		}
 
+		i += 1
 		partManifest := m.generatePartManifest(typesToWrite)
-		write(partManifest, output, &i)
+		partManifest.write(output, &i)
 	}
 
 }
@@ -145,7 +147,7 @@ func (m *Manifest) generatePartManifest(types []Types) (partManifest Manifest) {
 
 }
 
-func write(manifest Manifest, output string, filenumber *int) {
+func (m *Manifest) write(output string, filenumber *int) {
 
 	// XMLファイルの生成
 	var filename string
@@ -157,7 +159,7 @@ func write(manifest Manifest, output string, filenumber *int) {
 		filename = filepath.Join(output, fmt.Sprintf("%03d_package.xml", *filenumber))
 	}
 
-	manifestXml, err := xml.MarshalIndent(manifest, "", "    ")
+	manifestXml, err := xml.MarshalIndent(*m, "", "    ")
 	if err != nil {
 		log.Fatalf("Error marshalling XML: %v", err)
 	}

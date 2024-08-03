@@ -56,24 +56,17 @@ func GenerateOutputDirectory(output string) {
 
 }
 
-func (m *Manifest) GenerateModeDefault(output string, componentsPerFile int) {
+func (m *Manifest) GenerateXML(output string, mode string, n int) {
 
-	// Typesをコンポーネント毎に分割
-	tmp := m.Types
-	m.Types = []Types{}
+	// typesをコンポーネント毎に分割する
+	m.splitTypes()
 
-	for _, types := range tmp {
-		name := types.Name
-		for _, member := range types.Members {
-			typeToAppend := Types{
-				Members: []string{member},
-				Name:    name,
-			}
-			m.Types = append(m.Types, typeToAppend)
-		}
-	}
+	// 1ファイルに含まれるコンポーネント数の取得
+	componentsPerFile := m.calcComponentsPerFile(mode, n)
 
+	// XML書き込み
 	if len(m.Types) <= componentsPerFile {
+		// コンポーネント数が上限以下のときはそのまま書き込む
 		m.write(output, nil)
 
 	} else {
@@ -97,7 +90,7 @@ func (m *Manifest) GenerateModeDefault(output string, componentsPerFile int) {
 
 }
 
-func (m *Manifest) GenerateModeTypes(output string) {
+func (m *Manifest) GenerateXMLModeTypes(output string) {
 
 	// Typesごとにpackage.xmlを分割する
 	for i, t := range m.Types {
@@ -108,27 +101,33 @@ func (m *Manifest) GenerateModeTypes(output string) {
 
 }
 
-func (m *Manifest) GenerateModeFileSize(output string, n int) {
+func (m *Manifest) splitTypes() {
 
-	// 指定されたファイル数にpackage.xmlを分割する
-	// 1ファイルごとのTypes数
-	componentsPerFile := int(math.Ceil(float64(len(m.Types)) / float64(n)))
+	tmp := m.Types
+	m.Types = []Types{}
 
-	for i := 0; i < n; i++ {
-		startIdx := i * componentsPerFile
-		endIdx := startIdx + componentsPerFile
-		if endIdx > len(m.Types) {
-			endIdx = len(m.Types)
+	for _, types := range tmp {
+		name := types.Name
+		for _, member := range types.Members {
+			typeToAppend := Types{
+				Members: []string{member},
+				Name:    name,
+			}
+			m.Types = append(m.Types, typeToAppend)
 		}
-		typesToWrite := m.Types[startIdx:endIdx]
+	}
+}
 
-		if len(typesToWrite) == 0 {
-			break
-		}
+func (m *Manifest) calcComponentsPerFile(mode string, n int) (componentsPerFile int) {
 
-		i += 1
-		partManifest := m.generatePartManifest(typesToWrite)
-		partManifest.write(output, &i)
+	// 1ファイルに書き込むコンポーネントの上限を取得する
+	switch mode {
+	case ModeDefault:
+		return n
+	case ModeFiles:
+		return int(math.Ceil(float64(len(m.Types)) / float64(n)))
+	default:
+		return MemberLimit
 	}
 
 }

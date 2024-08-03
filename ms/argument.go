@@ -27,8 +27,10 @@ func RecieveArgs() (a Args) {
 	fmt.Print("分割モード(Enterでデフォルトモード): ")
 	fmt.Scanln(&a.Mode)
 
-	fmt.Print("1ファイルに含まれるコンポーネント数の上限(最大1万) または 分割したいファイル数: ")
-	fmt.Scanln(&a.Num)
+	if a.Mode != ModeTypes {
+		fmt.Print("1ファイルに含まれるコンポーネント数の上限(最大1万) または 分割したいファイル数: ")
+		fmt.Scanln(&a.Num)
+	}
 
 	a.validate()
 

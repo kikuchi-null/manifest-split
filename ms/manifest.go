@@ -4,7 +4,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"log"
 	"math"
 	"os"
 	"path/filepath"
@@ -24,19 +23,21 @@ type Types struct {
 	Name    string   `xml:"name"`
 }
 
-func ReadXML(input string) (m Manifest) {
+func ReadXML(input string) (m Manifest, err error) {
 
 	// package.xmlの読み込み
 	xmlFile, err := os.Open(input)
 	if err != nil {
-		log.Fatalf("Error opening file: %v", err)
+		err = fmt.Errorf("error opening %v %w", input, err)
+		return
 	}
 	defer xmlFile.Close()
 
 	byteValue, _ := io.ReadAll(xmlFile)
 
 	if err = xml.Unmarshal(byteValue, &m); err != nil {
-		log.Fatalf("Error unmarshalling XML: %v", err)
+		err = fmt.Errorf("error unmarshalling xml %v", err)
+		return
 	}
 
 	m.Xmlns = m.XMLName.Space
@@ -45,18 +46,20 @@ func ReadXML(input string) (m Manifest) {
 
 }
 
-func GenerateOutputDirectory(output string) {
+func GenerateOutputDirectory(output string) (err error) {
 
 	// 出力先ディレクトリの生成
 	// ディレクトリが存在しない場合のみ作成
-	err := os.MkdirAll(output, os.ModePerm)
+	err = os.MkdirAll(output, os.ModePerm)
 	if err != nil {
-		log.Fatalf("Error making output directory: %v", err)
+		err = fmt.Errorf("error making output directory: %v", err)
 	}
+
+	return
 
 }
 
-func (m *Manifest) GenerateXML(output string, mode string, n int) {
+func (m *Manifest) GenerateXML(output string, mode string, n int) (err error) {
 
 	// typesをコンポーネント毎に分割する
 	m.splitTypes()
@@ -81,24 +84,33 @@ func (m *Manifest) GenerateXML(output string, mode string, n int) {
 				partManifest := m.generatePartManifest(typesToWrite)
 
 				filenumber := int(math.Ceil(float64(i) / float64(componentsPerFile)))
-				partManifest.write(output, &filenumber)
+				err = partManifest.write(output, &filenumber)
+				if err != nil {
+					return
+				}
 
 				typesToWrite = []Types{}
 			}
 		}
 	}
 
+	return
+
 }
 
-func (m *Manifest) GenerateXMLModeTypes(output string) {
+func (m *Manifest) GenerateXMLModeTypes(output string) (err error) {
 
 	// Typesごとにpackage.xmlを分割する
 	for i, t := range m.Types {
 		i += 1
 		partManifest := m.generatePartManifest([]Types{t})
-		partManifest.write(output, &i)
+		err = partManifest.write(output, &i)
+		if err != nil {
+			return
+		}
 	}
 
+	return
 }
 
 func (m *Manifest) splitTypes() {
@@ -146,7 +158,7 @@ func (m *Manifest) generatePartManifest(types []Types) (partManifest Manifest) {
 
 }
 
-func (m *Manifest) write(output string, filenumber *int) {
+func (m *Manifest) write(output string, filenumber *int) (err error) {
 
 	// XMLファイルの生成
 	var filename string
@@ -160,14 +172,17 @@ func (m *Manifest) write(output string, filenumber *int) {
 
 	manifestXml, err := xml.MarshalIndent(*m, "", "    ")
 	if err != nil {
-		log.Fatalf("Error marshalling XML: %v", err)
+		err = fmt.Errorf("error marshalling xml: %v", err)
+		return
 	}
 
 	err = os.WriteFile(filename, append([]byte(xml.Header), manifestXml...), 0644)
 	if err != nil {
-		log.Fatalf("Error writing file: %v", err)
+		err = fmt.Errorf("error writing file: %v", err)
+		return
 	}
 
 	fmt.Printf("Generated file: %s\n", filename)
+	return
 
 }

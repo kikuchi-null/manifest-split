@@ -1,9 +1,8 @@
 package ms
 
 import (
-	"flag"
 	"fmt"
-	"log"
+	"os"
 )
 
 // 入力を格納する
@@ -60,6 +59,8 @@ func RecieveArgs() (a Args) {
 
 func (a *Args) validate() {
 
+	isOK := true
+
 	// 入力検証
 	if a.Mode == "" {
 		// モード指定がない場合はデフォルトモードで起動
@@ -68,26 +69,34 @@ func (a *Args) validate() {
 
 	if a.Mode == ModeSample && a.Output == "" {
 		// 出力先の入力確認
-		flag.Usage()
-		log.Fatalf("outputを指定してください")
+		// flag.Usage()
+		fmt.Println("outputを指定してください")
+		isOK = false
 	}
 
 	if a.Mode != ModeSample && (a.Input == "" || a.Output == "") {
 		// 入力ファイルと出力先の入力確認
-		flag.Usage()
-		log.Fatalf("inputとoutputを指定してください")
+		// flag.Usage()
+		fmt.Println("inputとoutputを指定してください")
+		isOK = false
 	}
 
 	if a.Mode == ModeDefault && (a.Num < 1 || a.Num > MemberLimit) {
 		// xmlファイルに含まれるコンポーネント数上限・下限確認
-		flag.Usage()
-		log.Fatalf("コンポーネント数は1〜10000までで指定してください")
+		// flag.Usage()
+		fmt.Println("コンポーネント数は1〜10000までで指定してください")
+		isOK = false
 	}
 
 	if a.Mode == ModeFiles && a.Num < 1 {
 		// 1ファイルに含まれる
-		flag.Usage()
-		log.Fatalf("ファイル数は1以上を指定してください")
+		// flag.Usage()
+		fmt.Println("ファイル数は1以上を指定してください")
+		isOK = false
+	}
+
+	if !isOK {
+		os.Exit(1)
 	}
 
 }

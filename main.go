@@ -1,14 +1,18 @@
 package main
 
 import (
+	"log"
 	"manifest-split/ms"
 )
 
 func main() {
-	run()
+	err := run()
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
 
-func run() {
+func run() (err error) {
 
 	// ターミナルからの入力を受け取る
 	args := ms.RecieveArgs()
@@ -21,12 +25,20 @@ func run() {
 		ms.GenerateLargePackageXML(args.Output)
 	case ms.ModeTypes:
 		// Typesごとに分割
-		manifest := ms.ReadXML(args.Input)
+		manifest, err := ms.ReadXML(args.Input)
+		if err != nil {
+			return err
+		}
 		manifest.GenerateXMLModeTypes(args.Output)
 	default:
 		// defalt または files
 		// package.xmlに含まれるコンポーネント数が10000以下になるように分割
-		manifest := ms.ReadXML(args.Input)
+		manifest, err := ms.ReadXML(args.Input)
+		if err != nil {
+			return err
+		}
 		manifest.GenerateXML(args.Output, args.Mode, args.Num)
 	}
+
+	return
 }

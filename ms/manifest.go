@@ -184,7 +184,7 @@ func (m *Manifest) write(output string, filenumber *int) (err error) {
 		return
 	}
 
-	color.Green(fmt.Sprintf("Generated: %s\n", filename))
+	color.Green("Generated: %s\n", filename)
 	return
 
 }

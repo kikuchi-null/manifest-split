@@ -3,6 +3,9 @@ package ms
 import (
 	"fmt"
 	"os"
+	"slices"
+
+	"github.com/fatih/color"
 )
 
 // 入力を格納する
@@ -16,18 +19,23 @@ type Args struct {
 // ターミナルからの入力を受け取る
 func RecieveArgs() (a Args) {
 
-	fmt.Println("入力したらEnter")
-	fmt.Print("分割したいpackage.xmlのパス: ")
-	fmt.Scanln(&a.Input)
+	fmt.Println("====== manifest-split ======")
+	fmt.Println("入力方法: 入力したらEnter")
 
-	fmt.Print("出力先のパス: ")
-	fmt.Scanln(&a.Output)
-
-	fmt.Print("分割モード(Enterでデフォルトモード): ")
+	fmt.Print("モード選択(default, files, types, sample): ")
 	fmt.Scanln(&a.Mode)
 
-	if a.Mode != ModeTypes {
-		fmt.Print("1ファイルに含まれるコンポーネント数の上限(最大1万) または 分割したいファイル数: ")
+	if a.Mode != ModeSample {
+		// サンプル作成モード以外
+		fmt.Print("分割したいpackage.xml: ")
+		fmt.Scanln(&a.Input)
+	}
+
+	fmt.Print("出力先: ")
+	fmt.Scanln(&a.Output)
+
+	if a.Mode == ModeDefault || a.Mode == ModeFiles || a.Mode == "" {
+		fmt.Print("1ファイルに含まれるコンポーネント数(1〜10000) または 分割したいファイル数: ")
 		fmt.Scanln(&a.Num)
 	}
 
@@ -37,29 +45,11 @@ func RecieveArgs() (a Args) {
 
 }
 
-// func RecieveArgs() (a Args) {
-// 	i := flag.String("input", "", "分割したいpackage.xmlのパス")
-// 	o := flag.String("output", "", "出力先のパス")
-// 	m := flag.String("mode", "default", "分割モード（任意）")
-// 	n := flag.Int("n", 1, "1ファイルに含まれるコンポーネント数の上限(最大1万) または 分割したいファイル数")
-// 	flag.Parse()
-
-// 	a = Args{
-// 		Input:  *i,
-// 		Output: *o,
-// 		Mode:   *m,
-// 		Num:    *n,
-// 	}
-
-// 	// 入力値の検証
-// 	a.validate()
-
-// 	return
-// }
-
 func (a *Args) validate() {
 
-	isOK := true
+	// 入力不備があった場合はtrue
+	var isError bool
+	var errmessages []string
 
 	// 入力検証
 	if a.Mode == "" {
@@ -67,35 +57,40 @@ func (a *Args) validate() {
 		a.Mode = ModeDefault
 	}
 
-	if a.Mode == ModeSample && a.Output == "" {
-		// 出力先の入力確認
-		// flag.Usage()
-		fmt.Println("outputを指定してください")
-		isOK = false
+	if result := slices.Contains(GetModes(), a.Mode); !result {
+		errmessages = append(errmessages, "Error: モードは[default, files, types, sample]から選択してください")
+		isError = true
 	}
 
 	if a.Mode != ModeSample && (a.Input == "" || a.Output == "") {
 		// 入力ファイルと出力先の入力確認
-		// flag.Usage()
-		fmt.Println("inputとoutputを指定してください")
-		isOK = false
+		errmessages = append(errmessages, "Error: 分割対象と出力先を指定してください")
+		isError = true
+	}
+
+	if a.Mode == ModeSample && a.Output == "" {
+		// 出力先の入力確認
+		errmessages = append(errmessages, "Error: 出力先を指定してください")
+		isError = true
 	}
 
 	if a.Mode == ModeDefault && (a.Num < 1 || a.Num > MemberLimit) {
 		// xmlファイルに含まれるコンポーネント数上限・下限確認
-		// flag.Usage()
-		fmt.Println("コンポーネント数は1〜10000までで指定してください")
-		isOK = false
+		errmessages = append(errmessages, "Error: コンポーネント数は1〜10000までで指定してください")
+		isError = true
 	}
 
 	if a.Mode == ModeFiles && a.Num < 1 {
-		// 1ファイルに含まれる
-		// flag.Usage()
-		fmt.Println("ファイル数は1以上を指定してください")
-		isOK = false
+		// ファイル数
+		errmessages = append(errmessages, "Error: ファイル数は1以上を指定してください")
+		isError = true
 	}
 
-	if !isOK {
+	if isError {
+		color.Red("\n====== エラー ======")
+		for _, mss := range errmessages {
+			color.Red(mss)
+		}
 		os.Exit(1)
 	}
 

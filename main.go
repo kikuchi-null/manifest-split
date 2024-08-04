@@ -18,7 +18,10 @@ func run() (err error) {
 	args := ms.RecieveArgs()
 
 	// 出力先 ディレクトリの生成
-	ms.GenerateOutputDirectory(args.Output)
+	err = ms.GenerateOutputDirectory(args.Output)
+	if err != nil {
+		return
+	}
 
 	switch args.Mode {
 	case ms.ModeSample:

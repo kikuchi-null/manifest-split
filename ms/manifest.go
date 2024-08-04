@@ -7,6 +7,8 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+
+	"github.com/fatih/color"
 )
 
 // Package.xmlを格納
@@ -165,9 +167,9 @@ func (m *Manifest) write(output string, filenumber *int) (err error) {
 
 	// ファイル番号が指定された場合は連番でファイルを生成する
 	if filenumber == nil {
-		filename = filepath.Join(output, "package.xml")
+		filename = filepath.Join(output, Filename)
 	} else {
-		filename = filepath.Join(output, fmt.Sprintf("%03d_package.xml", *filenumber))
+		filename = filepath.Join(output, fmt.Sprintf(FilenameWithNumber, *filenumber))
 	}
 
 	manifestXml, err := xml.MarshalIndent(*m, "", "    ")
@@ -182,7 +184,7 @@ func (m *Manifest) write(output string, filenumber *int) (err error) {
 		return
 	}
 
-	fmt.Printf("Generated file: %s\n", filename)
+	color.Green(fmt.Sprintf("Generated: %s\n", filename))
 	return
 
 }

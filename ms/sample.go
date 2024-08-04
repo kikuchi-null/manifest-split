@@ -11,9 +11,10 @@ func GenerateLargePackageXML(output string) {
 	metadataTypes := []string{"ApexClass", "CustomObject", "CustomField", "Workflow", "ValidationRule"}
 	numMembers := MemberLimit + 1 // 各メタデータタイプのメンバー数を10001に設定
 
-	var m Manifest
-	m.Xmlns = XMLNS
-	m.Version = VERSION
+	m := Manifest{
+		Xmlns:   SampleXmlns,
+		Version: SampleVersion,
+	}
 
 	for _, metadataType := range metadataTypes {
 		var t Types

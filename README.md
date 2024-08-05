@@ -13,3 +13,11 @@
 - ファイル(files)： 指定されたファイル数になるようにPackage.xmlを分割する（1〜)
 - タイプ(types): TypesごとにPackage.xmlを分割する
 - サンプル(sample)： Package.xmlのサンプルを生成する 
+
+## Credits
+
+- [Taiki Kikuchi](https://github.com/kikuchi-null)
+- https://github.com/fatih/color
+Copyright (c) 2013 Fatih Arslan
+Released under the MIT license
+https://opensource.org/licenses/mit-license.php

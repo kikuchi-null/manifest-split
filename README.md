@@ -16,6 +16,7 @@
 
 ## Credits
 
+- [Taiki Kikuchi](https://github.com/kikuchi-null)
 - https://github.com/fatih/color
 Copyright (c) 2013 Fatih Arslan
 Released under the MIT license

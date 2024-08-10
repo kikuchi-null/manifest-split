@@ -49,7 +49,7 @@ func (a *Args) validate() {
 
 	// 入力不備があった場合はtrue
 	var isError bool
-	var errmessages []string
+	var errMessages []string
 
 	// 入力検証
 	if a.Mode == "" {
@@ -58,37 +58,37 @@ func (a *Args) validate() {
 	}
 
 	if result := slices.Contains(GetModes(), a.Mode); !result {
-		errmessages = append(errmessages, "Error: モードは[default, files, types, sample]から選択してください")
+		errMessages = append(errMessages, "Error: モードは[default, files, types, sample]から選択してください")
 		isError = true
 	}
 
 	if a.Mode != ModeSample && (a.Input == "" || a.Output == "") {
 		// 入力ファイルと出力先の入力確認
-		errmessages = append(errmessages, "Error: 分割対象と出力先を指定してください")
+		errMessages = append(errMessages, "Error: 分割対象と出力先を指定してください")
 		isError = true
 	}
 
 	if a.Mode == ModeSample && a.Output == "" {
 		// 出力先の入力確認
-		errmessages = append(errmessages, "Error: 出力先を指定してください")
+		errMessages = append(errMessages, "Error: 出力先を指定してください")
 		isError = true
 	}
 
 	if a.Mode == ModeDefault && (a.Num < 1 || a.Num > MemberLimit) {
 		// xmlファイルに含まれるコンポーネント数上限・下限確認
-		errmessages = append(errmessages, "Error: コンポーネント数は1〜10000までで指定してください")
+		errMessages = append(errMessages, "Error: コンポーネント数は1〜10000までで指定してください")
 		isError = true
 	}
 
 	if a.Mode == ModeFiles && a.Num < 1 {
 		// ファイル数
-		errmessages = append(errmessages, "Error: ファイル数は1以上を指定してください")
+		errMessages = append(errMessages, "Error: ファイル数は1以上を指定してください")
 		isError = true
 	}
 
 	if isError {
 		color.Red("\n====== エラー ======")
-		for _, mss := range errmessages {
+		for _, mss := range errMessages {
 			color.Red(mss)
 		}
 		os.Exit(1)

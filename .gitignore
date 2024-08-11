@@ -24,7 +24,7 @@ go.work.sum
 # Mac
 .DS_Store
 
-# test data
+# sample
 ./sample
-./sample/input/*
-./sample/output/*
+./sample/input/*.xml
+./sample/output/*.xml

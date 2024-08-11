@@ -6,10 +6,12 @@ import (
 )
 
 func main() {
+
 	err := run()
 	if err != nil {
 		log.Fatalln(err)
 	}
+
 }
 
 func run() (err error) {
@@ -24,24 +26,31 @@ func run() (err error) {
 	}
 
 	switch args.Mode {
-	case ms.ModeSample:
-		ms.GenerateLargePackageXML(args.Output)
-	case ms.ModeTypes:
-		// Typesごとに分割
+	case ms.ModeSample: // sample
+		// 大量のコンポーネントを含むサンプルデータを作成する
+		err = ms.GenerateLargePackageXML(args.Output)
+		return
+
+	case ms.ModeTypes: // types
+		// Typesごとにpackage.xmlを分割する
 		manifest, err := ms.ReadXML(args.Input)
 		if err != nil {
 			return err
 		}
-		manifest.GenerateXMLModeTypes(args.Output)
-	default:
-		// defalt または files
+
+		err = manifest.GenerateXMLModeTypes(args.Output)
+		return err
+
+	default: // defalt または files
 		// package.xmlに含まれるコンポーネント数が10000以下になるように分割
 		manifest, err := ms.ReadXML(args.Input)
 		if err != nil {
 			return err
 		}
-		manifest.GenerateXML(args.Output, args.Mode, args.Num)
+
+		manifest.SplitTypes()
+		err = manifest.GenerateXML(args.Output, args.Mode, args.Num)
+		return err
 	}
 
-	return
 }

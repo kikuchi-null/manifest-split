@@ -25,6 +25,6 @@ go.work.sum
 .DS_Store
 
 # sample
-./sample
-./sample/input/*.xml
-./sample/output/*.xml
+/sample
+/sample/input/*.xml
+/sample/output/*.xml

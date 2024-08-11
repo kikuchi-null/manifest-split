@@ -45,6 +45,7 @@ func RecieveArgs() (a Args) {
 
 }
 
+// 入力検証
 func (a *Args) validate() {
 
 	// 入力不備があった場合はtrue

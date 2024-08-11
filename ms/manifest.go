@@ -12,7 +12,6 @@ import (
 )
 
 // Package.xmlを格納
-// 読み取り、書き込みともに利用する
 type Manifest struct {
 	XMLName xml.Name `xml:"Package"`
 	Xmlns   string   `xml:"xmlns,attr"`
@@ -30,7 +29,6 @@ func ReadXML(input string) (m Manifest, err error) {
 	// package.xmlの読み込み
 	xmlFile, err := os.Open(input)
 	if err != nil {
-		err = fmt.Errorf("error opening %v %w", input, err)
 		return
 	}
 	defer xmlFile.Close()
@@ -38,7 +36,6 @@ func ReadXML(input string) (m Manifest, err error) {
 	byteValue, _ := io.ReadAll(xmlFile)
 
 	if err = xml.Unmarshal(byteValue, &m); err != nil {
-		err = fmt.Errorf("error unmarshalling xml %v", err)
 		return
 	}
 
@@ -53,46 +50,37 @@ func GenerateOutputDirectory(output string) (err error) {
 	// 出力先ディレクトリの生成
 	// ディレクトリが存在しない場合のみ作成
 	err = os.MkdirAll(output, os.ModePerm)
-	if err != nil {
-		err = fmt.Errorf("error making output directory: %v", err)
-	}
-
 	return
 
 }
 
 func (m *Manifest) GenerateXML(output string, mode string, n int) (err error) {
 
-	// typesをコンポーネント毎に分割する
-	m.splitTypes()
-
 	// 1ファイルに含まれるコンポーネント数の取得
 	componentsPerFile := m.calcComponentsPerFile(mode, n)
 
 	// XML書き込み
 	if len(m.Types) <= componentsPerFile {
-		// コンポーネント数が上限以下のときはそのまま書き込む
-		m.write(output, nil)
+		// コンポーネント数が1ファイルに含まれるコンポーネント数の取得以下のときはそのまま書き込む
+		filename := generateFilename(output, nil)
+		err = m.write(filename)
+		return
+	}
 
-	} else {
-		// 指定されたコンポーネント数以下のpackage.xmlを作成する
-		typesToWrite := []Types{}
-		for i, t := range m.Types {
-			i += 1 // 処理済みコンポーネント数
-			typesToWrite = append(typesToWrite, t)
+	for i := 0; i <= len(m.Types); i += componentsPerFile {
+		// 1ファイルに含まれるコンポーネント数ごとにファイル書き込み
+		end := i + componentsPerFile
+		if end > len(m.Types) {
+			end = len(m.Types)
+		}
+		partManifest := m.generatePartManifest(m.Types[i:end])
 
-			if len(typesToWrite) == componentsPerFile || i == len(m.Types) {
-				// コンポーネント数が１ファイルの上限を超えたとき、もしくはループが最後のコンポーネントまで達したとき
-				partManifest := m.generatePartManifest(typesToWrite)
+		filenumber := int(math.Ceil(float64(end) / float64(componentsPerFile)))
+		filename := generateFilename(output, &filenumber)
 
-				filenumber := int(math.Ceil(float64(i) / float64(componentsPerFile)))
-				err = partManifest.write(output, &filenumber)
-				if err != nil {
-					return
-				}
-
-				typesToWrite = []Types{}
-			}
+		err = partManifest.write(filename)
+		if err != nil {
+			return
 		}
 	}
 
@@ -104,18 +92,22 @@ func (m *Manifest) GenerateXMLModeTypes(output string) (err error) {
 
 	// Typesごとにpackage.xmlを分割する
 	for i, t := range m.Types {
-		i += 1
+		i += 1 // ファイル番号
+
 		partManifest := m.generatePartManifest([]Types{t})
-		err = partManifest.write(output, &i)
+		filename := generateFilename(output, &i)
+
+		err = partManifest.write(filename)
 		if err != nil {
 			return
 		}
 	}
 
 	return
+
 }
 
-func (m *Manifest) splitTypes() {
+func (m *Manifest) SplitTypes() {
 
 	tmp := m.Types
 	m.Types = []Types{}
@@ -130,6 +122,7 @@ func (m *Manifest) splitTypes() {
 			m.Types = append(m.Types, typeToAppend)
 		}
 	}
+
 }
 
 func (m *Manifest) calcComponentsPerFile(mode string, n int) (componentsPerFile int) {
@@ -160,10 +153,7 @@ func (m *Manifest) generatePartManifest(types []Types) (partManifest Manifest) {
 
 }
 
-func (m *Manifest) write(output string, filenumber *int) (err error) {
-
-	// XMLファイルの生成
-	var filename string
+func generateFilename(output string, filenumber *int) (filename string) {
 
 	// ファイル番号が指定された場合は連番でファイルを生成する
 	if filenumber == nil {
@@ -172,15 +162,18 @@ func (m *Manifest) write(output string, filenumber *int) (err error) {
 		filename = filepath.Join(output, fmt.Sprintf(FilenameWithNumber, *filenumber))
 	}
 
+	return
+}
+
+func (m *Manifest) write(filename string) (err error) {
+
 	manifestXml, err := xml.MarshalIndent(*m, "", "    ")
 	if err != nil {
-		err = fmt.Errorf("error marshalling xml: %v", err)
 		return
 	}
 
 	err = os.WriteFile(filename, append([]byte(xml.Header), manifestXml...), 0644)
 	if err != nil {
-		err = fmt.Errorf("error writing file: %v", err)
 		return
 	}
 

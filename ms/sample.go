@@ -5,10 +5,18 @@ import (
 	"strings"
 )
 
-func GenerateLargePackageXML(output string) {
+func GenerateLargePackageXML(output string) (err error) {
 
 	// メタデータタイプとメンバーを任意に指定
-	metadataTypes := []string{"ApexClass", "CustomObject", "CustomField", "Workflow", "ValidationRule"}
+	metadataTypes := []string{
+		"ApexClass",
+		"ApexTrigger",
+		"CustomApplication",
+		"CustomObject",
+		"CustomField",
+		"Workflow",
+		"ValidationRule",
+	}
 	numMembers := MemberLimit + 1 // 各メタデータタイプのメンバー数を10001に設定
 
 	m := Manifest{
@@ -27,6 +35,9 @@ func GenerateLargePackageXML(output string) {
 	}
 
 	// XMLファイルを生成
-	m.write(output, nil)
+	filename := generateFilename(output, nil)
+	err = m.write(filename)
+
+	return
 
 }

@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// sampleのpackage.xmlを生成
 func GenerateLargePackageXML(output string) (err error) {
 
 	// メタデータタイプとメンバーを任意に指定
@@ -35,7 +36,7 @@ func GenerateLargePackageXML(output string) (err error) {
 	}
 
 	// XMLファイルを生成
-	filename := generateFilename(output, nil)
+	filename := generateFilename(output)
 	err = m.write(filename)
 
 	return

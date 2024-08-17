@@ -4,9 +4,11 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"maps"
 	"math"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/fatih/color"
 )
@@ -79,6 +81,7 @@ func (m *Manifest) GenerateXML(output string, mode string, n int) (err error) {
 		filenumber := int(math.Ceil(float64(end) / float64(componentsPerFile)))
 		filename := generateFilenameWithNumber(output, filenumber)
 
+		partManifest.combineTypes()
 		err = partManifest.write(filename)
 		if err != nil {
 			return
@@ -124,6 +127,27 @@ func (m *Manifest) SplitTypes() {
 			m.Types = append(m.Types, typeToAppend)
 		}
 	}
+
+}
+
+// コンポーネントをNameごとにTypesにまとめる
+func (m *Manifest) combineTypes() {
+
+	typesMap := make(map[string]Types)
+
+	for _, t := range m.Types {
+
+		if types, ok := typesMap[t.Name]; ok {
+			types.Members = append(types.Members, t.Members...)
+			typesMap[t.Name] = types
+			continue
+		}
+
+		typesMap[t.Name] = t
+	}
+
+	m.Types = []Types{}
+	m.Types = slices.AppendSeq(m.Types, maps.Values(typesMap))
 
 }
 

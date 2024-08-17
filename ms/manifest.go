@@ -118,11 +118,10 @@ func (m *Manifest) SplitTypes() {
 	m.Types = []Types{}
 
 	for _, types := range tmp {
-		name := types.Name
 		for _, member := range types.Members {
 			typeToAppend := Types{
 				Members: []string{member},
-				Name:    name,
+				Name:    types.Name,
 			}
 			m.Types = append(m.Types, typeToAppend)
 		}
@@ -136,8 +135,8 @@ func (m *Manifest) combineTypes() {
 	typesMap := make(map[string]Types)
 
 	for _, t := range m.Types {
-
-		if types, ok := typesMap[t.Name]; ok {
+		types, ok := typesMap[t.Name]
+		if ok {
 			types.Members = append(types.Members, t.Members...)
 			typesMap[t.Name] = types
 			continue

@@ -35,7 +35,10 @@ func ReadXML(input string) (m Manifest, err error) {
 	}
 	defer xmlFile.Close()
 
-	byteValue, _ := io.ReadAll(xmlFile)
+	byteValue, err := io.ReadAll(xmlFile)
+	if err != nil {
+		return
+	}
 
 	if err = xml.Unmarshal(byteValue, &m); err != nil {
 		return

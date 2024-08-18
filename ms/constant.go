@@ -6,7 +6,7 @@ const (
 	ModeFiles   string = "files"
 	ModeTypes   string = "types"
 	ModeSample  string = "sample"
-	MemberLimit int    = 10000
+	MemberLimit int    = 10000 // 1ファイルの上限
 )
 
 func GetModes() (modes []string) {
@@ -23,4 +23,19 @@ const (
 const (
 	SampleXmlns   string = "http://soap.sforce.com/2006/04/metadata"
 	SampleVersion string = "61.0"
+	SampleNum     int    = 1000 //コンポーネント数
 )
+
+func GetTypes() (types []string) {
+	types = []string{
+		"ApexClass",
+		"ApexTrigger",
+		"CustomApplication",
+		"CustomObject",
+		"CustomField",
+		"Profile",
+		"Workflow",
+		"ValidationRule",
+	}
+	return
+}

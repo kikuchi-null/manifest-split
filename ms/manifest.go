@@ -73,7 +73,7 @@ func (m *Manifest) GenerateXML(output string, mode string, n int) (err error) {
 		return
 	}
 
-	for i := 0; i <= len(m.Types); i += componentsPerFile {
+	for i := 0; i < len(m.Types); i += componentsPerFile {
 		// 1ファイルに含まれるコンポーネント数ごとにファイル書き込み
 		end := i + componentsPerFile
 		if end > len(m.Types) {

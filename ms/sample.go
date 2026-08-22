@@ -6,7 +6,8 @@ import (
 )
 
 // sampleのpackage.xmlを生成
-func GenerateLargePackageXML(output string) (err error) {
+// 書き込んだファイルのパス一覧を返す(呼び出し元がCleanOutputDirectoryの keep として利用する)
+func GenerateLargePackageXML(output string) (written []string, err error) {
 
 	m := Manifest{
 		Xmlns:   SampleXmlns,
@@ -25,7 +26,10 @@ func GenerateLargePackageXML(output string) (err error) {
 
 	// XMLファイルを生成
 	filename := generateFilename(output)
-	err = m.write(filename)
+	if err = m.write(filename); err != nil {
+		return
+	}
+	written = append(written, filename)
 
 	return
 

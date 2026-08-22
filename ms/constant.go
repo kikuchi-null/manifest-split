@@ -1,5 +1,8 @@
 package ms
 
+// バージョン
+const Version string = "1.1.0"
+
 // 各種モード
 const (
 	ModeDefault string = "default"

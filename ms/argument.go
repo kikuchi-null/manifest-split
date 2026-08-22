@@ -1,6 +1,7 @@
 package ms
 
 import (
+	"flag"
 	"fmt"
 	"os"
 	"slices"
@@ -14,10 +15,39 @@ type Args struct {
 	Output string
 	Mode   string
 	Num    int
+	Clean  bool
 }
 
-// ターミナルからの入力を受け取る
+// コマンドラインフラグ
+// flag.Parse()自体はmain.goで一度だけ呼び出す
+var (
+	fMode   = flag.String("mode", "", "分割モード (default, files, types, sample)")
+	fInput  = flag.String("input", "", "分割したいpackage.xmlのパス")
+	fOutput = flag.String("output", "", "出力先ディレクトリ")
+	fNum    = flag.Int("num", 0, "1ファイルに含まれるコンポーネント数 または 分割したいファイル数")
+	fClean  = flag.Bool("clean", false, "出力先ディレクトリの既存のpackage.xmlを削除してから書き込む")
+)
+
+// mode/input/output/numのいずれかがフラグで指定されていれば非対話(バッチ)モードとする
+func isBatchMode() bool {
+	return *fMode != "" || *fInput != "" || *fOutput != "" || *fNum != 0
+}
+
+// 入力を受け取る
+// フラグ指定があれば非対話で、なければ従来通りターミナルから対話的に受け取る
 func RecieveArgs() (a Args) {
+
+	if isBatchMode() {
+		a.Mode = *fMode
+		a.Input = *fInput
+		a.Output = *fOutput
+		a.Num = *fNum
+		a.Clean = *fClean
+
+		a.validate()
+
+		return
+	}
 
 	fmt.Println("====== manifest-split ======")
 	fmt.Println("入力方法: 入力したらEnter")
@@ -38,6 +68,9 @@ func RecieveArgs() (a Args) {
 		fmt.Print("1ファイルに含まれるコンポーネント数(1〜10000) または 分割したいファイル数: ")
 		fmt.Scanln(&a.Num)
 	}
+
+	// -cleanは対話モードでも独立して有効
+	a.Clean = *fClean
 
 	a.validate()
 

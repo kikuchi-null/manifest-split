@@ -4,11 +4,10 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"maps"
 	"math"
 	"os"
 	"path/filepath"
-	"slices"
+	"regexp"
 
 	"github.com/fatih/color"
 )
@@ -46,6 +45,19 @@ func ReadXML(input string) (m Manifest, err error) {
 
 	m.Xmlns = m.XMLName.Space
 
+	if m.XMLName.Local != "Package" || len(m.Types) == 0 {
+		err = fmt.Errorf("有効なpackage.xmlではないか、typesが含まれていません")
+		return
+	}
+
+	for _, t := range m.Types {
+		if len(t.Members) == 0 {
+			// membersを持たないtypesはSplitTypesで無言に消えてしまうため、ここで検出する
+			err = fmt.Errorf("type %q にmembersが含まれていません", t.Name)
+			return
+		}
+	}
+
 	return
 
 }
@@ -59,8 +71,73 @@ func GenerateOutputDirectory(output string) (err error) {
 
 }
 
+// 本ツールが生成するファイル名(package.xml または NNN_package.xml)と厳密に一致するかどうか
+// "*package.xml"のような緩いglobだと無関係なファイル(例: backup_package.xml)まで対象にしてしまうため、
+// 生成規則(constant.goのFilename/FilenameWithNumber)そのものに厳密一致させる
+var numberedFilenamePattern = regexp.MustCompile(`^\d+_` + regexp.QuoteMeta(Filename) + `$`)
+
+func isGeneratedFilename(name string) bool {
+	return name == Filename || numberedFilenamePattern.MatchString(name)
+}
+
+// 出力先ディレクトリ内の、今回の実行で書き込まなかった残存生成物を削除する
+// 「先に消してから書く」のではなく「書き終わった後に不要なものだけ消す」ことで、
+// 読み込み/書き込みが失敗した場合に既存の正常な出力を巻き込んで失うことを防ぐ
+// keepには今回書き込んだファイルの絶対/相対パスを渡す(このパスは削除対象から除外される)
+// ディレクトリが存在しない場合は何もしない
+func CleanOutputDirectory(output string, keep []string) (err error) {
+
+	entries, err := os.ReadDir(output)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = nil
+		}
+		return
+	}
+
+	keepSet := make(map[string]struct{}, len(keep))
+	for _, k := range keep {
+		if abs, absErr := filepath.Abs(k); absErr == nil {
+			keepSet[abs] = struct{}{}
+		}
+	}
+
+	for _, e := range entries {
+		if e.IsDir() || !isGeneratedFilename(e.Name()) {
+			continue
+		}
+
+		path := filepath.Join(output, e.Name())
+
+		if abs, absErr := filepath.Abs(path); absErr == nil {
+			if _, ok := keepSet[abs]; ok {
+				continue
+			}
+		}
+
+		if err = os.Remove(path); err != nil {
+			return
+		}
+		color.Yellow("Removed: %s\n", path)
+	}
+
+	return
+
+}
+
 // xmlファイルを生成(default, files)
-func (m *Manifest) GenerateXML(output string, mode string, n int) (err error) {
+// 書き込んだファイルのパス一覧を返す(呼び出し元がCleanOutputDirectoryの keep として利用する)
+func (m *Manifest) GenerateXML(output string, mode string, n int) (written []string, err error) {
+
+	if mode != ModeDefault && mode != ModeFiles {
+		err = fmt.Errorf("不正なモードです: %q", mode)
+		return
+	}
+
+	if n < 1 {
+		err = fmt.Errorf("コンポーネント数またはファイル数は1以上を指定してください: %d", n)
+		return
+	}
 
 	// 1ファイルに含まれるコンポーネント数の取得
 	componentsPerFile := m.calcComponentsPerFile(mode, n)
@@ -68,8 +145,13 @@ func (m *Manifest) GenerateXML(output string, mode string, n int) (err error) {
 	// XML書き込み
 	if len(m.Types) <= componentsPerFile {
 		// コンポーネント数が1ファイルに含まれるコンポーネント数の取得以下のときはそのまま書き込む
+		// SplitTypesで1メンバーごとに分解されているため、書き込み前に同名typeをまとめ直す
+		m.combineTypes()
 		filename := generateFilename(output)
-		err = m.write(filename)
+		if err = m.write(filename); err != nil {
+			return
+		}
+		written = append(written, filename)
 		return
 	}
 
@@ -85,10 +167,10 @@ func (m *Manifest) GenerateXML(output string, mode string, n int) (err error) {
 		filename := generateFilenameWithNumber(output, filenumber)
 
 		partManifest.combineTypes()
-		err = partManifest.write(filename)
-		if err != nil {
+		if err = partManifest.write(filename); err != nil {
 			return
 		}
+		written = append(written, filename)
 	}
 
 	return
@@ -96,7 +178,8 @@ func (m *Manifest) GenerateXML(output string, mode string, n int) (err error) {
 }
 
 // Typesごとにpackage.xmlを分割する
-func (m *Manifest) GenerateXMLModeTypes(output string) (err error) {
+// 書き込んだファイルのパス一覧を返す(呼び出し元がCleanOutputDirectoryの keep として利用する)
+func (m *Manifest) GenerateXMLModeTypes(output string) (written []string, err error) {
 
 	for i, t := range m.Types {
 		i += 1 // ファイル番号
@@ -104,10 +187,10 @@ func (m *Manifest) GenerateXMLModeTypes(output string) (err error) {
 		partManifest := m.generatePartManifest([]Types{t})
 		filename := generateFilenameWithNumber(output, i)
 
-		err = partManifest.write(filename)
-		if err != nil {
+		if err = partManifest.write(filename); err != nil {
 			return
 		}
+		written = append(written, filename)
 	}
 
 	return
@@ -133,27 +216,33 @@ func (m *Manifest) SplitTypes() {
 }
 
 // コンポーネントをNameごとにTypesにまとめる
+// mapの走査順は実行のたびに変わるため、Nameの初出順を別途保持して出力順を安定させる
 func (m *Manifest) combineTypes() {
 
-	typesMap := make(map[string]Types)
+	typesMap := make(map[string]*Types)
+	var order []string
 
 	for _, t := range m.Types {
-		types, ok := typesMap[t.Name]
-		if ok {
+		if types, ok := typesMap[t.Name]; ok {
 			types.Members = append(types.Members, t.Members...)
-			typesMap[t.Name] = types
 			continue
 		}
 
-		typesMap[t.Name] = t
+		typesCopy := Types{Name: t.Name, Members: append([]string{}, t.Members...)}
+		typesMap[t.Name] = &typesCopy
+		order = append(order, t.Name)
 	}
 
-	m.Types = []Types{}
-	m.Types = slices.AppendSeq(m.Types, maps.Values(typesMap))
+	m.Types = make([]Types, 0, len(order))
+	for _, name := range order {
+		m.Types = append(m.Types, *typesMap[name])
+	}
 
 }
 
 // 1ファイルに書き込むコンポーネントの上限を取得する
+// mode は GenerateXML で ModeDefault/ModeFiles のいずれかであることを検証済みの前提のため、
+// それ以外はここでは定義されていないmodeとして扱う
 func (m *Manifest) calcComponentsPerFile(mode string, n int) (componentsPerFile int) {
 
 	switch mode {
@@ -162,7 +251,7 @@ func (m *Manifest) calcComponentsPerFile(mode string, n int) (componentsPerFile 
 	case ModeFiles:
 		return int(math.Ceil(float64(len(m.Types)) / float64(n)))
 	default:
-		return MemberLimit
+		panic(fmt.Sprintf("定義されていないmodeです: %q", mode))
 	}
 
 }
